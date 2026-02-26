@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from finsight.api.routes import alerts, health, market, query
 from finsight.config.logging import setup_logging
@@ -21,6 +22,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
 app.include_router(query.router, tags=["Query"])
 app.include_router(market.router, tags=["Market Data"])

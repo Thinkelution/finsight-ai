@@ -1,0 +1,131 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "panels": [
+    {
+      "title": "Query Rate (queries/min)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {
+          "expr": "rate(finsight_queries_total[5m]) * 60",
+          "legendFormat": "{{asset_class}} - {{status}}"
+        }
+      ]
+    },
+    {
+      "title": "Query Latency (p50, p95, p99)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(finsight_query_latency_seconds_bucket[5m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(finsight_query_latency_seconds_bucket[5m]))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(finsight_query_latency_seconds_bucket[5m]))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "title": "Articles Ingested (by source)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {
+          "expr": "rate(finsight_articles_ingested_total[5m]) * 60",
+          "legendFormat": "{{source_type}}"
+        }
+      ]
+    },
+    {
+      "title": "Qdrant Collection Size",
+      "type": "stat",
+      "gridPos": {"h": 8, "w": 6, "x": 12, "y": 8},
+      "targets": [
+        {
+          "expr": "finsight_qdrant_points",
+          "legendFormat": "points"
+        }
+      ]
+    },
+    {
+      "title": "Sentiment Distribution",
+      "type": "piechart",
+      "gridPos": {"h": 8, "w": 6, "x": 18, "y": 8},
+      "targets": [
+        {
+          "expr": "finsight_sentiment_total",
+          "legendFormat": "{{label}}"
+        }
+      ]
+    },
+    {
+      "title": "LLM Inference Latency",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(finsight_llm_inference_latency_seconds_bucket[5m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(finsight_llm_inference_latency_seconds_bucket[5m]))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "title": "Alerts Fired (by type)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+      "targets": [
+        {
+          "expr": "rate(finsight_alerts_fired_total[5m]) * 60",
+          "legendFormat": "{{alert_type}}"
+        }
+      ]
+    },
+    {
+      "title": "Ingestion Errors",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+      "targets": [
+        {
+          "expr": "rate(finsight_ingestion_errors_total[5m]) * 60",
+          "legendFormat": "{{source_type}}"
+        }
+      ]
+    },
+    {
+      "title": "Embedding Latency",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(finsight_embedding_latency_seconds_bucket[5m]))",
+          "legendFormat": "p95 embedding"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["finsight"],
+  "templating": {"list": []},
+  "time": {"from": "now-1h", "to": "now"},
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "FinSight AI - Pipeline Dashboard",
+  "uid": "finsight-pipeline",
+  "version": 1
+}
