@@ -152,3 +152,37 @@ def process_single_article(self, article: dict):
     except Exception as e:
         logger.error("process_article_task_failed", error=str(e))
         raise self.retry(exc=e)
+
+
+@app.task
+def check_price_alerts():
+    """Check current prices against previous prices for alert-worthy moves."""
+    try:
+        from finsight.ingestion.market_data import MarketDataFetcher
+        from finsight.inference.alerter import MarketAlerter
+
+        market = MarketDataFetcher()
+        alerter = MarketAlerter()
+
+        prices = market.get_live_prices()
+        changes = prices.get("changes", {})
+        rates = prices.get("rates", {})
+
+        alerts_fired = 0
+        for symbol, pct in changes.items():
+            if abs(pct) > alerter.threshold * 100:
+                current = rates.get(symbol, 0)
+                previous = current / (1 + pct / 100) if pct != -100 else 0
+                alert = alerter.check_price_move(symbol, current, previous)
+                if alert:
+                    alerts_fired += 1
+
+        if changes:
+            alerter.check_cross_asset_correlation(changes)
+
+        logger.info("price_alert_check_complete", alerts=alerts_fired)
+        return {"alerts_fired": alerts_fired}
+
+    except Exception as e:
+        logger.error("price_alert_check_failed", error=str(e))
+        return {"error": str(e)}

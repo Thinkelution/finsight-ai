@@ -47,4 +47,8 @@ app.conf.beat_schedule = {
         "task": "finsight.workers.tasks.cleanup_expired_chunks",
         "schedule": crontab(minute=0, hour="*/6"),
     },
+    "check-price-alerts": {
+        "task": "finsight.workers.tasks.check_price_alerts",
+        "schedule": 60.0,
+    },
 }

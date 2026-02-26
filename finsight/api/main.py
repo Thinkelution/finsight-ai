@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from finsight.api.routes import health, market, query
+from finsight.api.routes import alerts, health, market, query
 from finsight.config.logging import setup_logging
 
 setup_logging()
@@ -25,6 +25,7 @@ app.add_middleware(
 app.include_router(query.router, tags=["Query"])
 app.include_router(market.router, tags=["Market Data"])
 app.include_router(health.router, tags=["Health"])
+app.include_router(alerts.router, tags=["Alerts"])
 
 
 @app.on_event("startup")
