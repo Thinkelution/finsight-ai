@@ -1,8 +1,11 @@
 """POST /query endpoint for financial question answering."""
 
-from fastapi import APIRouter
+import uuid
+
+from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
+from finsight.api.rate_limiter import rate_limiter
 from finsight.api.schemas import QueryRequest, QueryResponse
 from finsight.config.logging import get_logger
 from finsight.inference.query_engine import FinancialQueryEngine
@@ -22,23 +25,34 @@ def _get_engine() -> FinancialQueryEngine:
 
 
 @router.post("/query", response_model=QueryResponse)
-async def query(request: QueryRequest):
-    engine = _get_engine()
+async def query(request_body: QueryRequest, request: Request):
+    rate_limiter.check(request)
 
-    if request.stream:
+    engine = _get_engine()
+    session_id = request_body.session_id or str(uuid.uuid4())
+
+    if request_body.stream:
         return StreamingResponse(
             engine.query_stream(
-                user_question=request.question,
-                asset_class=request.asset_class,
-                hours_back=request.hours_back,
+                user_question=request_body.question,
+                asset_class=request_body.asset_class,
+                hours_back=request_body.hours_back,
             ),
             media_type="text/plain",
         )
 
     result = engine.query(
-        user_question=request.question,
-        asset_class=request.asset_class,
-        hours_back=request.hours_back,
+        user_question=request_body.question,
+        asset_class=request_body.asset_class,
+        hours_back=request_body.hours_back,
     )
 
-    return QueryResponse(**result)
+    from finsight.inference.chat_history import ChatHistory
+    history = ChatHistory(session_id)
+    history.add_user_message(request_body.question)
+    history.add_assistant_message(result["answer"])
+
+    return QueryResponse(
+        **result,
+        session_id=session_id,
+    )

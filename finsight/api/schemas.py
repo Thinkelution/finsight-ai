@@ -11,6 +11,10 @@ class QueryRequest(BaseModel):
     )
     hours_back: int = Field(default=24, ge=1, le=168)
     stream: bool = Field(default=False, description="Enable streaming response")
+    session_id: str | None = Field(
+        default=None,
+        description="Session ID for multi-turn conversation history",
+    )
 
 
 class QueryResponse(BaseModel):
@@ -18,6 +22,8 @@ class QueryResponse(BaseModel):
     sources: list[str]
     live_prices_at: str
     chunks_used: int
+    provider: str = "ollama"
+    session_id: str | None = None
 
 
 class MarketPricesResponse(BaseModel):
