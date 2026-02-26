@@ -44,6 +44,13 @@ class ProcessingPipeline:
             logger.error("embedding_pipeline_failed", article_id=article_id, error=str(e))
             return []
 
+        flat_entities = (
+            entities.get("tickers", [])
+            + entities.get("fx_pairs", [])
+            + entities.get("companies", [])[:5]
+        )
+        geo_tags = entities.get("geopolitical", [])
+
         payloads = []
         for chunk, embedding in zip(chunks, embeddings):
             payloads.append(
@@ -57,8 +64,10 @@ class ProcessingPipeline:
                         "url": article.get("url", ""),
                         "title": article.get("title", ""),
                         "published_at": article.get("published_at", ""),
-                        "entities": entities,
-                        "sentiment": sentiment,
+                        "entities": flat_entities,
+                        "geopolitical_tags": geo_tags,
+                        "sentiment_score": sentiment.get("score", 0),
+                        "sentiment_label": sentiment.get("label", "neutral"),
                         "asset_classes": article.get("asset_classes", []),
                         "regions": article.get("regions", []),
                         "chunk_index": chunk["chunk_index"],

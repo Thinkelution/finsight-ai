@@ -71,6 +71,37 @@ rss_feeds:
     asset_classes: [equities, macro]
     regions: [us]
 
+  # Google News — General & Topic Feeds (for macro/geopolitical implications)
+  - name: google_news_top
+    url: https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en
+    interval_seconds: 120
+    asset_classes: [macro, geopolitical]
+    regions: [global]
+
+  - name: google_news_business
+    url: https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en
+    interval_seconds: 120
+    asset_classes: [equities, macro]
+    regions: [global]
+
+  - name: google_news_technology
+    url: https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGRqTVhZU0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en
+    interval_seconds: 180
+    asset_classes: [equities, macro]
+    regions: [global]
+
+  - name: google_news_world
+    url: https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en
+    interval_seconds: 180
+    asset_classes: [macro, geopolitical]
+    regions: [global]
+
+  - name: google_news_science
+    url: https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFp0Y1RjU0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en
+    interval_seconds: 300
+    asset_classes: [equities, macro]
+    regions: [global]
+
 web_scrape_targets:
   - name: reuters_markets_page
     url: https://www.reuters.com/markets/

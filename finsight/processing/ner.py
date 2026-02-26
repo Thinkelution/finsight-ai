@@ -37,14 +37,23 @@ KNOWN_TICKERS = {
     "GLD", "SLV", "USO", "VIX",
 }
 
+GEOPOLITICAL_KEYWORDS = {
+    "tariff", "sanctions", "trade war", "embargo", "nato", "opec",
+    "fed", "ecb", "boj", "interest rate", "inflation", "recession",
+    "gdp", "stimulus", "fiscal", "monetary policy", "debt ceiling",
+    "government shutdown", "election", "regulation", "antitrust",
+    "nuclear", "war", "conflict", "ceasefire", "treaty", "summit",
+    "supreme court", "executive order", "infrastructure bill",
+}
+
 
 @lru_cache(maxsize=1)
 def _load_spacy():
     try:
         import spacy
         return spacy.load("en_core_web_sm")
-    except OSError:
-        logger.warning("spacy_model_not_found, falling back to regex-only NER")
+    except Exception:
+        logger.warning("spacy_unavailable_using_regex_ner")
         return None
 
 
@@ -68,6 +77,10 @@ def extract_entities(text: str) -> dict:
     ]
     result["tickers"] = list(set(valid_tickers))[:20]
 
+    text_lower = text.lower()
+    geo_tags = [kw for kw in GEOPOLITICAL_KEYWORDS if kw in text_lower]
+    result["geopolitical"] = geo_tags[:10]
+
     nlp = _load_spacy()
     if nlp:
         doc = nlp(text[:10000])
@@ -76,8 +89,6 @@ def extract_entities(text: str) -> dict:
                 result["organizations"].append(ent.text)
             elif ent.label_ == "PERSON":
                 result["people"].append(ent.text)
-            elif ent.label_ == "GPE":
-                pass  # geopolitical entities not stored separately for now
 
         result["companies"] = list(set(result["organizations"]))[:20]
         result["people"] = list(set(result["people"]))[:10]

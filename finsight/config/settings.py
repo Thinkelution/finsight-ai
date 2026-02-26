@@ -11,7 +11,7 @@ class Settings(BaseSettings):
 
     # Ollama
     ollama_host: str = "http://localhost:11434"
-    ollama_llm_model: str = "finsight-qwen14b"
+    ollama_llm_model: str = "finsight"
     ollama_embed_model: str = "nomic-embed-text"
 
     # Market Data APIs

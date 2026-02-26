@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinSight AI — Real-Time Financial Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-inner">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                            <rect width="28" height="28" rx="8" fill="url(#logo-grad)"/>
+                            <path d="M8 18L12 12L16 15L20 8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="20" cy="8" r="2" fill="white"/>
+                            <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+                        </svg>
+                    </div>
+                    <span class="logo-text">FinSight <span class="logo-ai">AI</span></span>
+                </div>
+                <div class="header-status" id="header-status">
+                    <span class="status-dot"></span>
+                    <span>Connecting...</span>
+                </div>
+                <nav class="header-nav">
+                    <button class="nav-btn active" data-tab="dashboard">Dashboard</button>
+                    <button class="nav-btn" data-tab="ask">Ask AI</button>
+                    <button class="nav-btn" data-tab="feed">News Feed</button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Dashboard Tab -->
+        <main class="content" id="tab-dashboard">
+            <!-- Stats Row -->
+            <div class="stats-row" id="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon green"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L10 18M10 2L4 8M10 2L16 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-chunks">—</span>
+                        <span class="stat-label">Indexed Chunks</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V10L13 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-model">—</span>
+                        <span class="stat-label">LLM Model</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M2 16L6 10L10 13L14 7L18 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-symbols">—</span>
+                        <span class="stat-label">Market Symbols</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon amber"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L12.5 7.5L18 8.5L14 12.5L15 18L10 15.5L5 18L6 12.5L2 8.5L7.5 7.5L10 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-health">—</span>
+                        <span class="stat-label">System Health</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Market Prices -->
+            <section class="section">
+                <div class="section-header">
+                    <h2>Live Market Prices</h2>
+                    <button class="btn-refresh" onclick="loadMarketData()">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 2V6H10M2 14V10H6M13.66 10A6 6 0 014.34 3.34M2.34 6A6 6 0 0111.66 12.66" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Refresh
+                    </button>
+                </div>
+                <div class="market-grid" id="market-grid">
+                    <div class="loading-placeholder">Loading market data...</div>
+                </div>
+            </section>
+
+            <!-- Alerts Section -->
+            <section class="section">
+                <div class="section-header">
+                    <h2>Alerts</h2>
+                </div>
+                <div id="alerts-container" class="alerts-container">
+                    <div class="empty-state">No alerts yet. The system monitors prices for significant moves.</div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Ask AI Tab -->
+        <main class="content hidden" id="tab-ask">
+            <section class="section ask-section">
+                <div class="ask-header">
+                    <h2>Ask FinSight AI</h2>
+                    <p class="ask-subtitle">Powered by a fine-tuned Qwen 2.5 14B model with real-time market data via RAG</p>
+                </div>
+                <div class="ask-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="chat-welcome">
+                            <div class="chat-welcome-icon">
+                                <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="14" fill="url(#cw-grad)"/><path d="M14 32L20 22L26 26L34 16" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="34" cy="16" r="3" fill="white"/><defs><linearGradient id="cw-grad" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs></svg>
+                            </div>
+                            <h3>What would you like to know?</h3>
+                            <div class="suggestion-chips">
+                                <button class="chip" onclick="askSuggestion(this)">What's driving the S&P 500 today?</button>
+                                <button class="chip" onclick="askSuggestion(this)">Analyze EUR/USD outlook</button>
+                                <button class="chip" onclick="askSuggestion(this)">What are the top market risks right now?</button>
+                                <button class="chip" onclick="askSuggestion(this)">Summarize crypto market sentiment</button>
+                                <button class="chip" onclick="askSuggestion(this)">How are today's geopolitical events affecting markets?</button>
+                                <button class="chip" onclick="askSuggestion(this)">What global news should investors watch today?</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ask-input-row">
+                        <input type="text" id="ask-input" placeholder="Ask about markets, forex, crypto, macro..." autocomplete="off" onkeydown="if(event.key==='Enter')askQuestion()">
+                        <button class="btn-send" id="btn-send" onclick="askQuestion()">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M18 2L9 11M18 2L12 18L9 11M18 2L2 8L9 11" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- News Feed Tab -->
+        <main class="content hidden" id="tab-feed">
+            <section class="section">
+                <div class="section-header">
+                    <h2>News & Intelligence Feed</h2>
+                    <button class="btn-refresh" onclick="loadNewsFeed()">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 2V6H10M2 14V10H6M13.66 10A6 6 0 014.34 3.34M2.34 6A6 6 0 0111.66 12.66" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Refresh
+                    </button>
+                </div>
+                <div class="feed-filters" id="feed-filters">
+                    <button class="filter-btn active" data-category="all" onclick="filterFeed('all', this)">All News</button>
+                    <button class="filter-btn" data-category="finance" onclick="filterFeed('finance', this)">Finance</button>
+                    <button class="filter-btn" data-category="geopolitical" onclick="filterFeed('geopolitical', this)">Geopolitical</button>
+                    <button class="filter-btn" data-category="tech" onclick="filterFeed('tech', this)">Technology</button>
+                </div>
+                <div id="feed-container" class="feed-container">
+                    <div class="empty-state">No news ingested yet. Start the Celery workers to begin ingesting news feeds.</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
