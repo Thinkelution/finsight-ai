@@ -314,6 +314,144 @@ function formatTime(iso) {
     } catch { return iso; }
 }
 
+// --- Predictions ---
+async function loadPredictions() {
+    const grid = document.getElementById('pred-grid');
+    const parallelsEl = document.getElementById('parallels-container');
+    const analysisEl = document.getElementById('pred-analysis');
+    const confValue = document.getElementById('pred-confidence-value');
+    const confFill = document.getElementById('pred-confidence-fill');
+
+    grid.innerHTML = '<div class="loading-placeholder"><span class="loading-spinner"></span> Analyzing current news against historical patterns...</div>';
+    parallelsEl.innerHTML = '<div class="loading-placeholder"><span class="loading-spinner"></span> Searching historical parallels...</div>';
+    analysisEl.innerHTML = '<div class="loading-placeholder"><span class="loading-spinner"></span> Generating analysis...</div>';
+
+    try {
+        const res = await fetch(`${API}/predictions`);
+        const data = await res.json();
+
+        const confidence = data.confidence || 0;
+        confValue.textContent = `${confidence}%`;
+        confFill.style.width = `${confidence}%`;
+        confFill.className = `pred-confidence-fill ${confidence >= 70 ? 'high' : confidence >= 40 ? 'mid' : 'low'}`;
+
+        const predictions = data.predictions || [];
+        if (predictions.length === 0) {
+            grid.innerHTML = '<div class="empty-state">No predictions available yet. Ensure historical data has been collected and indexed.</div>';
+        } else {
+            grid.innerHTML = '';
+            for (const pred of predictions) {
+                const dirClass = pred.direction === 'BULLISH' ? 'bullish' : pred.direction === 'BEARISH' ? 'bearish' : 'neutral-dir';
+                const arrow = pred.direction === 'BULLISH' ? '▲' : pred.direction === 'BEARISH' ? '▼' : '—';
+                const card = document.createElement('div');
+                card.className = `pred-card ${dirClass}`;
+                card.innerHTML = `
+                    <div class="pred-card-header">
+                        <span class="pred-asset">${escHtml(pred.asset)}</span>
+                        <span class="pred-direction ${dirClass}">${arrow} ${pred.direction}</span>
+                    </div>
+                    <div class="pred-card-confidence">
+                        <div class="pred-mini-bar">
+                            <div class="pred-mini-fill ${dirClass}" style="width:${pred.confidence}%"></div>
+                        </div>
+                        <span>${pred.confidence}% confidence</span>
+                    </div>
+                    <div class="pred-card-reasoning">${escHtml(pred.reasoning || '')}</div>
+                `;
+                grid.appendChild(card);
+            }
+        }
+
+        const parallels = data.parallels || [];
+        if (parallels.length === 0) {
+            parallelsEl.innerHTML = '<div class="empty-state">No historical parallels found. Run the historical data collection pipeline first.</div>';
+        } else {
+            parallelsEl.innerHTML = '';
+            for (const p of parallels) {
+                const matchPct = Math.round((p.similarity || 0) * 100);
+                const el = document.createElement('div');
+                el.className = 'parallel-card';
+                el.innerHTML = `
+                    <div class="parallel-header">
+                        <span class="parallel-date">Week of ${escHtml(p.week)}</span>
+                        <span class="parallel-match">${matchPct}% match</span>
+                    </div>
+                    <div class="parallel-summary">${escHtml(p.summary || '')}</div>
+                `;
+                parallelsEl.appendChild(el);
+            }
+        }
+
+        const analysisText = data.prediction_text || 'No analysis available.';
+        analysisEl.innerHTML = `<div class="pred-analysis-text">${formatAnswer(analysisText)}</div>`;
+
+    } catch (e) {
+        grid.innerHTML = `<div class="empty-state">Failed to load predictions: ${escHtml(e.message)}</div>`;
+        parallelsEl.innerHTML = '<div class="empty-state">Error loading parallels</div>';
+        analysisEl.innerHTML = '<div class="empty-state">Error loading analysis</div>';
+    }
+
+    loadHistoricalStatus();
+}
+
+async function loadHistoricalStatus() {
+    const container = document.getElementById('historical-status');
+    try {
+        const res = await fetch(`${API}/predictions/status`);
+        const data = await res.json();
+
+        container.innerHTML = `
+            <div class="hist-status-grid">
+                <div class="hist-status-item ${data.market_data ? 'active' : ''}">
+                    <span class="hist-status-icon">${data.market_data ? '✓' : '○'}</span>
+                    <div>
+                        <div class="hist-status-label">Market Data</div>
+                        <div class="hist-status-detail">${data.market_data_rows ? data.market_data_rows.toLocaleString() + ' rows' : 'Not collected'}</div>
+                        ${data.market_date_range ? `<div class="hist-status-detail">${data.market_date_range}</div>` : ''}
+                    </div>
+                </div>
+                <div class="hist-status-item ${data.economic_data ? 'active' : ''}">
+                    <span class="hist-status-icon">${data.economic_data ? '✓' : '○'}</span>
+                    <div>
+                        <div class="hist-status-label">Economic Indicators</div>
+                        <div class="hist-status-detail">${data.economic_data ? 'Available' : 'Not collected'}</div>
+                    </div>
+                </div>
+                <div class="hist-status-item ${data.wikipedia_events ? 'active' : ''}">
+                    <span class="hist-status-icon">${data.wikipedia_events ? '✓' : '○'}</span>
+                    <div>
+                        <div class="hist-status-label">Wikipedia Events</div>
+                        <div class="hist-status-detail">${data.wikipedia_months ? data.wikipedia_months + ' months' : 'Not collected'}</div>
+                    </div>
+                </div>
+                <div class="hist-status-item ${data.gdelt_articles ? 'active' : ''}">
+                    <span class="hist-status-icon">${data.gdelt_articles ? '✓' : '○'}</span>
+                    <div>
+                        <div class="hist-status-label">GDELT News</div>
+                        <div class="hist-status-detail">${data.gdelt_weeks ? data.gdelt_weeks + ' weeks' : 'Not collected'}</div>
+                    </div>
+                </div>
+                <div class="hist-status-item ${data.training_pairs > 0 ? 'active' : ''}">
+                    <span class="hist-status-icon">${data.training_pairs > 0 ? '✓' : '○'}</span>
+                    <div>
+                        <div class="hist-status-label">Training Pairs</div>
+                        <div class="hist-status-detail">${data.training_pairs || 0} pairs generated</div>
+                    </div>
+                </div>
+                <div class="hist-status-item ${data.indexed_patterns > 0 ? 'active' : ''}">
+                    <span class="hist-status-icon">${data.indexed_patterns > 0 ? '✓' : '○'}</span>
+                    <div>
+                        <div class="hist-status-label">Indexed Patterns</div>
+                        <div class="hist-status-detail">${data.indexed_patterns || 0} patterns in vector DB</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (e) {
+        container.innerHTML = '<div class="empty-state">Unable to check historical data status</div>';
+    }
+}
+
 // --- Initial Load ---
 async function init() {
     loadHealth();

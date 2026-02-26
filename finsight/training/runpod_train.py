@@ -23,12 +23,13 @@ WORKSPACE = Path("/workspace")
 REPO_DIR = WORKSPACE / "finsight-ai"
 DATASET_DIR = WORKSPACE / "datasets"
 DATASET_FILE = DATASET_DIR / "financial_qa.jsonl"
+HISTORICAL_FILE = DATASET_DIR / "historical_combined.jsonl"
 CHECKPOINT_DIR = WORKSPACE / "checkpoints"
 ADAPTER_DIR = WORKSPACE / "lora_adapter"
 MERGED_DIR = WORKSPACE / "merged_model"
 GGUF_OUTPUT = WORKSPACE / "finsight_qwen14b_q4.gguf"
 
-MAX_SEQ_LENGTH = 2048
+MAX_SEQ_LENGTH = 4096  # increased for historical context pairs
 MODEL_NAME = "unsloth/Qwen2.5-14B-bnb-4bit"
 
 
@@ -172,6 +173,31 @@ def step_prepare_dataset():
         print(f"    FinQA: {count} examples")
     except Exception as e:
         print(f"    FinQA failed: {e}")
+
+    # Load historical training pairs if available
+    if HISTORICAL_FILE.exists():
+        print(f"\n  Loading historical training pairs from {HISTORICAL_FILE}...")
+        hist_count = 0
+        with open(HISTORICAL_FILE) as hf:
+            for line in hf:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    data = json.loads(line)
+                    if data.get("output"):
+                        all_examples.append({
+                            "instruction": data.get("instruction", ""),
+                            "input": data.get("input", ""),
+                            "output": data["output"],
+                        })
+                        hist_count += 1
+                except json.JSONDecodeError:
+                    continue
+        print(f"    Historical pairs: {hist_count}")
+    else:
+        print(f"\n  No historical data found at {HISTORICAL_FILE}")
+        print("  Upload historical_combined.jsonl to include historical training data")
 
     # Write JSONL
     valid = [e for e in all_examples if e.get("output")]

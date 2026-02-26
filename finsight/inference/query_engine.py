@@ -42,6 +42,7 @@ class FinancialQueryEngine:
             news_chunks=context["news_chunks"],
             live_prices=context["live_prices"],
             market_summary=context["market_summary"],
+            historical_context=context.get("historical_context", ""),
         )
 
         llm_result = query_with_fallback(user_prompt)
@@ -52,6 +53,7 @@ class FinancialQueryEngine:
             "live_prices_at": context["live_prices"].get("timestamp", "N/A"),
             "chunks_used": len(chunks),
             "provider": llm_result.get("provider", "ollama"),
+            "has_historical_context": bool(context.get("historical_context")),
         }
 
         logger.info(
@@ -85,6 +87,7 @@ class FinancialQueryEngine:
             news_chunks=context["news_chunks"],
             live_prices=context["live_prices"],
             market_summary=context["market_summary"],
+            historical_context=context.get("historical_context", ""),
         )
 
         try:
@@ -94,7 +97,7 @@ class FinancialQueryEngine:
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt},
                 ],
-                options={"temperature": 0.1, "num_ctx": 8192},
+                options={"temperature": 0.4, "num_ctx": 8192, "num_predict": 1024},
                 stream=True,
             )
             for chunk in stream:

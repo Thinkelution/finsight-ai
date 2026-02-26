@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from finsight.api.routes import alerts, feed, health, market, query
+from finsight.api.routes import alerts, feed, health, market, predictions, query
 from finsight.config.logging import setup_logging
 
 setup_logging()
@@ -34,6 +34,7 @@ app.include_router(market.router, tags=["Market Data"])
 app.include_router(health.router, tags=["Health"])
 app.include_router(alerts.router, tags=["Alerts"])
 app.include_router(feed.router, tags=["Data Feed"])
+app.include_router(predictions.router, tags=["Predictions"])
 
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend")
 

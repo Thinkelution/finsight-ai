@@ -30,6 +30,7 @@
                 </div>
                 <nav class="header-nav">
                     <button class="nav-btn active" data-tab="dashboard">Dashboard</button>
+                    <button class="nav-btn" data-tab="predictions">Predictions</button>
                     <button class="nav-btn" data-tab="ask">Ask AI</button>
                     <button class="nav-btn" data-tab="feed">News Feed</button>
                 </nav>
@@ -95,6 +96,62 @@
             </section>
         </main>
 
+        <!-- Predictions Tab -->
+        <main class="content hidden" id="tab-predictions">
+            <section class="section">
+                <div class="section-header">
+                    <h2>Market Trend Predictions</h2>
+                    <button class="btn-refresh" onclick="loadPredictions()">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 2V6H10M2 14V10H6M13.66 10A6 6 0 014.34 3.34M2.34 6A6 6 0 0111.66 12.66" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Refresh
+                    </button>
+                </div>
+                <p class="section-subtitle">AI-generated predictions based on current news analyzed against historical market patterns</p>
+
+                <div class="pred-confidence-bar" id="pred-confidence">
+                    <div class="pred-confidence-label">
+                        <span>Overall Confidence</span>
+                        <span id="pred-confidence-value">—</span>
+                    </div>
+                    <div class="pred-confidence-track">
+                        <div class="pred-confidence-fill" id="pred-confidence-fill" style="width:0%"></div>
+                    </div>
+                </div>
+
+                <div class="pred-grid" id="pred-grid">
+                    <div class="loading-placeholder"><span class="loading-spinner"></span> Generating predictions from historical patterns...</div>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-header">
+                    <h2>Historical Parallels</h2>
+                </div>
+                <p class="section-subtitle">Past events with similar patterns to current market conditions</p>
+                <div id="parallels-container" class="parallels-container">
+                    <div class="loading-placeholder">Loading historical parallels...</div>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-header">
+                    <h2>Detailed Analysis</h2>
+                </div>
+                <div id="pred-analysis" class="pred-analysis">
+                    <div class="empty-state">Click Refresh to generate predictions</div>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-header">
+                    <h2>Historical Data Status</h2>
+                </div>
+                <div id="historical-status" class="historical-status">
+                    <div class="loading-placeholder">Loading...</div>
+                </div>
+            </section>
+        </main>
+
         <!-- Ask AI Tab -->
         <main class="content hidden" id="tab-ask">
             <section class="section ask-section">
@@ -113,8 +170,10 @@
                                 <button class="chip" onclick="askSuggestion(this)">What's driving the S&P 500 today?</button>
                                 <button class="chip" onclick="askSuggestion(this)">Analyze EUR/USD outlook</button>
                                 <button class="chip" onclick="askSuggestion(this)">What are the top market risks right now?</button>
-                                <button class="chip" onclick="askSuggestion(this)">Summarize crypto market sentiment</button>
+                                <button class="chip" onclick="askSuggestion(this)">Based on historical patterns, what's the market outlook this week?</button>
                                 <button class="chip" onclick="askSuggestion(this)">How are today's geopolitical events affecting markets?</button>
+                                <button class="chip" onclick="askSuggestion(this)">Compare current conditions to similar historical periods</button>
+                                <button class="chip" onclick="askSuggestion(this)">What do historical patterns suggest for gold and oil?</button>
                                 <button class="chip" onclick="askSuggestion(this)">What global news should investors watch today?</button>
                             </div>
                         </div>

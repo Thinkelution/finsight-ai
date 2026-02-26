@@ -31,12 +31,14 @@ class TimeWeightedRetriever:
         """
         filters = self._build_filters(asset_class)
 
-        results = self.client.search(
+        response = self.client.query_points(
             collection_name=self.collection,
-            query_vector=query_embedding,
+            query=query_embedding,
             query_filter=filters,
             limit=k * 3,
+            with_payload=True,
         )
+        results = response.points if hasattr(response, "points") else []
 
         if not results:
             logger.info("no_retrieval_results")
@@ -101,12 +103,14 @@ class TimeWeightedRetriever:
                 )
             ]
         )
-        return self.client.search(
+        response = self.client.query_points(
             collection_name=self.collection,
-            query_vector=query_embedding,
+            query=query_embedding,
             query_filter=source_filter,
             limit=k,
+            with_payload=True,
         )
+        return response.points if hasattr(response, "points") else []
 
     def get_collection_stats(self) -> dict:
         info = self.client.get_collection(self.collection)

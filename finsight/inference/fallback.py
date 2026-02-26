@@ -1,5 +1,6 @@
 """Groq API fallback when local Ollama is slow or unavailable."""
 
+import re
 import time
 
 import httpx
@@ -12,7 +13,14 @@ logger = get_logger(__name__)
 
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.1-70b-versatile"
-OLLAMA_TIMEOUT = 60  # seconds before triggering fallback
+OLLAMA_TIMEOUT = 60
+
+
+def _clean_answer(text: str) -> str:
+    """Strip training-artefact prefixes like '=== ANSWER ===' from model output."""
+    text = re.sub(r"^=+\s*ANSWER\s*=+\s*\n?", "", text.strip())
+    text = re.sub(r"^Based on the news and market data above, here is my detailed analysis:\s*\n?", "", text)
+    return text.strip()
 
 
 def query_with_fallback(user_prompt: str) -> dict:
@@ -27,12 +35,14 @@ def query_with_fallback(user_prompt: str) -> dict:
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt},
             ],
-            options={"temperature": 0.1, "num_ctx": 8192},
+            options={"temperature": 0.4, "num_ctx": 8192, "num_predict": 1024},
         )
         latency = time.time() - start
         logger.info("ollama_query_success", latency=round(latency, 1))
+        raw_answer = response["message"]["content"]
+        answer = _clean_answer(raw_answer)
         return {
-            "answer": response["message"]["content"],
+            "answer": answer,
             "provider": "ollama",
             "latency": round(latency, 1),
         }
