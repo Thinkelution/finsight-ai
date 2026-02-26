@@ -1,0 +1,192 @@
+rss_feeds:
+  - name: reuters_markets
+    url: https://feeds.reuters.com/reuters/businessNews
+    interval_seconds: 60
+    asset_classes: [equities, macro]
+    regions: [global]
+
+  - name: reuters_world
+    url: https://feeds.reuters.com/reuters/worldNews
+    interval_seconds: 120
+    asset_classes: [macro]
+    regions: [global]
+
+  - name: fxstreet
+    url: https://www.fxstreet.com/rss/news
+    interval_seconds: 60
+    asset_classes: [forex]
+    regions: [global]
+
+  - name: investing_forex
+    url: https://www.investing.com/rss/news_14.rss
+    interval_seconds: 60
+    asset_classes: [forex]
+    regions: [global]
+
+  - name: investing_economy
+    url: https://www.investing.com/rss/news_95.rss
+    interval_seconds: 120
+    asset_classes: [macro]
+    regions: [global]
+
+  - name: cnbc_markets
+    url: https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=15839069
+    interval_seconds: 60
+    asset_classes: [equities, macro]
+    regions: [us]
+
+  - name: cnbc_world
+    url: https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100727362
+    interval_seconds: 120
+    asset_classes: [macro]
+    regions: [global]
+
+  - name: marketwatch_top
+    url: https://feeds.content.dowjones.io/public/rss/mw_topstories
+    interval_seconds: 60
+    asset_classes: [equities, macro]
+    regions: [us]
+
+  - name: marketwatch_markets
+    url: https://feeds.content.dowjones.io/public/rss/mw_marketpulse
+    interval_seconds: 60
+    asset_classes: [equities, forex, commodities]
+    regions: [us]
+
+  - name: seeking_alpha
+    url: https://seekingalpha.com/market_currents.xml
+    interval_seconds: 120
+    asset_classes: [equities]
+    regions: [us]
+
+  - name: ft_markets
+    url: https://www.ft.com/markets?format=rss
+    interval_seconds: 120
+    asset_classes: [equities, forex, macro]
+    regions: [global]
+
+  - name: yahoo_finance
+    url: https://finance.yahoo.com/news/rssindex
+    interval_seconds: 60
+    asset_classes: [equities, macro]
+    regions: [us]
+
+web_scrape_targets:
+  - name: reuters_markets_page
+    url: https://www.reuters.com/markets/
+    section_selector: "article a"
+    interval_seconds: 300
+    asset_classes: [equities, forex, macro]
+    regions: [global]
+
+  - name: cnbc_markets_page
+    url: https://www.cnbc.com/markets/
+    section_selector: "div.Card-titleContainer a"
+    interval_seconds: 300
+    asset_classes: [equities, macro]
+    regions: [us]
+
+  - name: bloomberg_markets
+    url: https://www.bloomberg.com/markets
+    section_selector: "article a"
+    interval_seconds: 600
+    asset_classes: [equities, forex, commodities, macro]
+    regions: [global]
+    requires_browser: true
+
+  - name: ft_markets_page
+    url: https://www.ft.com/markets
+    section_selector: "a.js-teaser-heading-link"
+    interval_seconds: 600
+    asset_classes: [equities, forex, macro]
+    regions: [global]
+
+  - name: sec_edgar_filings
+    url: https://efts.sec.gov/LATEST/search-index?q=%22press+release%22&dateRange=custom&startdt={today}&enddt={today}
+    interval_seconds: 1800
+    asset_classes: [equities]
+    regions: [us]
+
+  - name: prnewswire_financial
+    url: https://www.prnewswire.com/news-releases/financial-services-latest-news/financial-services-list/
+    section_selector: "a.newsreleaseconsolidatelink"
+    interval_seconds: 600
+    asset_classes: [equities]
+    regions: [us, global]
+
+  - name: globenewswire_finance
+    url: https://www.globenewswire.com/news-release/category/9/Financial-Markets
+    section_selector: "a.main-link"
+    interval_seconds: 600
+    asset_classes: [equities, macro]
+    regions: [global]
+
+social_feeds:
+  reddit:
+    subreddits:
+      - name: wallstreetbets
+        sort: hot
+        limit: 25
+        interval_seconds: 300
+      - name: stocks
+        sort: hot
+        limit: 25
+        interval_seconds: 300
+      - name: investing
+        sort: hot
+        limit: 25
+        interval_seconds: 600
+      - name: forex
+        sort: hot
+        limit: 15
+        interval_seconds: 600
+      - name: economics
+        sort: hot
+        limit: 15
+        interval_seconds: 600
+
+  stocktwits:
+    symbols:
+      - SPY
+      - QQQ
+      - AAPL
+      - TSLA
+      - NVDA
+    trending: true
+    interval_seconds: 300
+
+market_data:
+  forex_pairs:
+    - EURUSD=X
+    - GBPUSD=X
+    - USDJPY=X
+    - AUDUSD=X
+    - USDCAD=X
+    - USDCHF=X
+    - NZDUSD=X
+    - EURGBP=X
+    - EURJPY=X
+    - GBPJPY=X
+
+  indices:
+    - ^GSPC    # S&P 500
+    - ^DJI     # Dow Jones
+    - ^IXIC    # NASDAQ
+    - ^FTSE    # FTSE 100
+    - ^GDAXI   # DAX
+    - ^N225    # Nikkei 225
+    - ^HSI     # Hang Seng
+
+  commodities:
+    - GC=F     # Gold
+    - SI=F     # Silver
+    - CL=F     # Crude Oil
+    - NG=F     # Natural Gas
+    - HG=F     # Copper
+
+  crypto:
+    - BTC-USD
+    - ETH-USD
+    - SOL-USD
+
+  update_interval_seconds: 30
