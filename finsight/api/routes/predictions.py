@@ -13,6 +13,33 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/predictions")
 
 
+def _get_recent_wikipedia_context() -> list[str]:
+    """Fallback: load the most recent Wikipedia events as prediction context."""
+    from pathlib import Path
+    import json
+
+    wiki_dir = Path("data/historical/news/wikipedia")
+    if not wiki_dir.exists():
+        return []
+
+    files = sorted(wiki_dir.glob("*.jsonl"), reverse=True)
+    events = []
+    for f in files[:2]:
+        try:
+            for line in open(f):
+                ev = json.loads(line.strip())
+                text = ev.get("text", "")
+                if text and len(text) > 30:
+                    events.append(text[:200])
+                if len(events) >= 15:
+                    break
+        except Exception:
+            continue
+        if len(events) >= 15:
+            break
+    return events
+
+
 class PredictionRequest(BaseModel):
     context: str = ""
     top_parallels: int = 5
@@ -22,37 +49,32 @@ class PredictionRequest(BaseModel):
 async def get_predictions():
     """Generate trend predictions based on current news + historical patterns."""
     try:
-        from finsight.storage.qdrant_store import get_qdrant_client
         from finsight.historical.trend_predictor import predict_trends
 
-        client = get_qdrant_client()
-        results = client.scroll(
-            collection_name=settings.qdrant_collection,
-            limit=20,
-            with_payload=True,
-            with_vectors=False,
-        )
-
         news_texts = []
-        for point in results[0]:
-            payload = point.payload or {}
-            text = payload.get("text", "")
-            title = payload.get("metadata", {}).get("title", "")
-            if title:
-                news_texts.append(title)
-            elif text:
-                news_texts.append(text[:200])
+
+        try:
+            from finsight.storage.qdrant_store import get_qdrant_client
+            client = get_qdrant_client()
+            results = client.scroll(
+                collection_name=settings.qdrant_collection,
+                limit=20,
+                with_payload=True,
+                with_vectors=False,
+            )
+            for point in results[0]:
+                payload = point.payload or {}
+                text = payload.get("text", "")
+                title = payload.get("metadata", {}).get("title", "")
+                if title:
+                    news_texts.append(title)
+                elif text:
+                    news_texts.append(text[:200])
+        except Exception as e:
+            logger.warning("news_chunks_unavailable", error=str(e))
 
         if not news_texts:
-            return {
-                "predictions": [],
-                "parallels": [],
-                "prediction_text": "No recent news available for prediction.",
-                "confidence": 0,
-                "generated_at": datetime.now(timezone.utc).isoformat(),
-            }
-
-        current_context = "\n".join(news_texts[:15])
+            news_texts = _get_recent_wikipedia_context()
 
         market_data = None
         try:
@@ -61,6 +83,24 @@ async def get_predictions():
             market_data = fetcher.get_live_prices()
         except Exception:
             pass
+
+        if not news_texts and not market_data:
+            return {
+                "predictions": [],
+                "parallels": [],
+                "prediction_text": "No news or market data available. Start the news ingestion pipeline to get live predictions.",
+                "confidence": 0,
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+            }
+
+        current_context = "\n".join(news_texts[:15])
+        if market_data:
+            prices_summary = []
+            for key, val in market_data.items():
+                if key != "timestamp" and isinstance(val, (int, float)):
+                    prices_summary.append(f"{key}: {val}")
+            if prices_summary:
+                current_context += "\n\nCurrent market prices: " + ", ".join(prices_summary[:10])
 
         result = predict_trends(current_context, market_data)
         return result

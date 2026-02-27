@@ -3,13 +3,19 @@
 const API = '';
 
 // --- Tab Navigation ---
+let predictionsLoaded = false;
 document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         document.querySelectorAll('.content').forEach(c => c.classList.add('hidden'));
-        const tab = document.getElementById(`tab-${btn.dataset.tab}`);
+        const tabId = btn.dataset.tab;
+        const tab = document.getElementById(`tab-${tabId}`);
         if (tab) tab.classList.remove('hidden');
+        if (tabId === 'predictions' && !predictionsLoaded) {
+            predictionsLoaded = true;
+            loadPredictions();
+        }
     });
 });
 
@@ -294,11 +300,71 @@ function escHtml(str) {
 }
 
 function formatAnswer(text) {
-    return escHtml(text)
-        .replace(/\n\n/g, '<br><br>')
-        .replace(/\n/g, '<br>')
+    if (!text) return '';
+    const lines = text.split('\n');
+    let html = '';
+    let inList = false;
+    let inOl = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+
+        // Headers
+        if (/^#{1,3}\s/.test(line)) {
+            if (inList) { html += '</ul>'; inList = false; }
+            if (inOl) { html += '</ol>'; inOl = false; }
+            const level = line.match(/^(#+)/)[1].length;
+            const content = escHtml(line.replace(/^#+\s*/, ''));
+            html += `<h${level + 1} style="margin:12px 0 6px;color:var(--text-primary)">${applyInline(content)}</h${level + 1}>`;
+            continue;
+        }
+
+        // Unordered list
+        if (/^\s*[-*•]\s/.test(line)) {
+            if (inOl) { html += '</ol>'; inOl = false; }
+            if (!inList) { html += '<ul style="margin:6px 0;padding-left:20px">'; inList = true; }
+            const content = escHtml(line.replace(/^\s*[-*•]\s*/, ''));
+            html += `<li style="margin:3px 0">${applyInline(content)}</li>`;
+            continue;
+        }
+
+        // Ordered list
+        if (/^\s*\d+[.)]\s/.test(line)) {
+            if (inList) { html += '</ul>'; inList = false; }
+            if (!inOl) { html += '<ol style="margin:6px 0;padding-left:20px">'; inOl = true; }
+            const content = escHtml(line.replace(/^\s*\d+[.)]\s*/, ''));
+            html += `<li style="margin:3px 0">${applyInline(content)}</li>`;
+            continue;
+        }
+
+        if (inList) { html += '</ul>'; inList = false; }
+        if (inOl) { html += '</ol>'; inOl = false; }
+
+        // Empty line = paragraph break
+        if (line.trim() === '') {
+            html += '<div style="height:8px"></div>';
+            continue;
+        }
+
+        // Regular paragraph
+        html += `<p style="margin:4px 0;line-height:1.6">${applyInline(escHtml(line))}</p>`;
+    }
+
+    if (inList) html += '</ul>';
+    if (inOl) html += '</ol>';
+    return html;
+}
+
+function applyInline(text) {
+    return text
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/`(.*?)`/g, '<code style="background:var(--bg-primary);padding:1px 4px;border-radius:3px;font-size:12px">$1</code>');
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`(.*?)`/g, '<code style="background:var(--bg-primary);padding:1px 5px;border-radius:3px;font-size:0.9em">$1</code>')
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:var(--accent)">$1</a>')
+        .replace(/(https?:\/\/[^\s<\]]+)/g, (match, url) => {
+            if (match.includes('</a>') || text.indexOf(`(${url})`) !== -1) return match;
+            return `<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent);word-break:break-all">${url}</a>`;
+        });
 }
 
 function formatTime(iso) {
@@ -322,12 +388,26 @@ async function loadPredictions() {
     const confValue = document.getElementById('pred-confidence-value');
     const confFill = document.getElementById('pred-confidence-fill');
 
-    grid.innerHTML = '<div class="loading-placeholder"><span class="loading-spinner"></span> Analyzing current news against historical patterns...</div>';
-    parallelsEl.innerHTML = '<div class="loading-placeholder"><span class="loading-spinner"></span> Searching historical parallels...</div>';
-    analysisEl.innerHTML = '<div class="loading-placeholder"><span class="loading-spinner"></span> Generating analysis...</div>';
+    let seconds = 0;
+    const timerEl = document.createElement('span');
+    timerEl.className = 'loading-timer';
+    grid.innerHTML = '';
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'loading-placeholder';
+    loadingDiv.innerHTML = '<span class="loading-spinner"></span> Analyzing historical patterns and generating predictions... <span class="loading-timer">0s</span>';
+    grid.appendChild(loadingDiv);
+    const timer = setInterval(() => {
+        seconds++;
+        const t = loadingDiv.querySelector('.loading-timer');
+        if (t) t.textContent = `${seconds}s`;
+    }, 1000);
+
+    parallelsEl.innerHTML = '<div class="loading-placeholder"><span class="loading-spinner"></span> Searching 527 historical patterns...</div>';
+    analysisEl.innerHTML = '<div class="loading-placeholder"><span class="loading-spinner"></span> Waiting for AI model...</div>';
 
     try {
         const res = await fetch(`${API}/predictions`);
+        clearInterval(timer);
         const data = await res.json();
 
         const confidence = data.confidence || 0;
@@ -386,6 +466,7 @@ async function loadPredictions() {
         analysisEl.innerHTML = `<div class="pred-analysis-text">${formatAnswer(analysisText)}</div>`;
 
     } catch (e) {
+        clearInterval(timer);
         grid.innerHTML = `<div class="empty-state">Failed to load predictions: ${escHtml(e.message)}</div>`;
         parallelsEl.innerHTML = '<div class="empty-state">Error loading parallels</div>';
         analysisEl.innerHTML = '<div class="empty-state">Error loading analysis</div>';

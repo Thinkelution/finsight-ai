@@ -6,7 +6,7 @@
     <title>FinSight AI — Real-Time Financial Intelligence</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=3">
 </head>
 <body>
     <div id="app">
@@ -119,7 +119,7 @@
                 </div>
 
                 <div class="pred-grid" id="pred-grid">
-                    <div class="loading-placeholder"><span class="loading-spinner"></span> Generating predictions from historical patterns...</div>
+                    <div class="empty-state">Loading predictions...</div>
                 </div>
             </section>
 
@@ -129,7 +129,7 @@
                 </div>
                 <p class="section-subtitle">Past events with similar patterns to current market conditions</p>
                 <div id="parallels-container" class="parallels-container">
-                    <div class="loading-placeholder">Loading historical parallels...</div>
+                    <div class="empty-state">Parallels will appear after loading predictions</div>
                 </div>
             </section>
 
@@ -211,6 +211,6 @@
         </main>
     </div>
 
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js?v=3"></script>
 </body>
 </html>
